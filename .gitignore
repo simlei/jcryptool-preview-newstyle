@@ -5,6 +5,7 @@
 /.traces/
 *.class
 *.jar
+!/jctjars/**/*.jar
 /target
 *.cache
 /.tsproject/vim/sessions
