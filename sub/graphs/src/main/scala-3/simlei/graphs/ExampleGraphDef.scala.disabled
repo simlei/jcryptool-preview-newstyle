@@ -1,0 +1,114 @@
+package simlei.graphs
+import cats.Show
+import simlei.util.*
+
+object ExampleGraphDef:
+
+  object rsaparams extends GraphSpec:
+    val defs = rsaparams_defs
+    import defs.RSAParamNode.*
+    // import defs.RSAParamEdge.*
+    import defs.RSAParamEdge.*
+
+    override type NodeT      = defs.RSAParamNode
+    // override type EdgeT      = defs.RSAParamEdge
+    override type EdgeT      = defs.RSAParamEdge
+    override type InputNodeT = defs.RSAParamINode
+    // override val edges       = List(PIn_to_P, QIn_to_Q)
+    override val edges       = List(PIn_to_P, QIn_to_Q, EIn_to_E, P_to_PxQ, Q_to_PxQ, PxQ_to_PQ, PQ_to_N, PQ_to_Phi, E_to_ExPhi, Phi_to_ExPhi, ExPhi_to_EPhi, EPhi_to_DE, N_to_DExN, DE_to_DExN, DExN_to_DEN)
+    override val nodes       = List(PIn, QIn, P, Q, PxQ, PQ, N, Phi, EIn, E, ExPhi, EPhi, DE, DExN, DEN)
+    override val inputnodes  = List(PIn, QIn, EIn)
+
+  object rsaparams_defs:
+    sealed trait RSAParamNode
+    sealed trait RSAParamINode extends RSAParamNode // the input nodes
+    object RSAParamNode:
+      case object PIn      extends RSAParamINode
+      case object QIn      extends RSAParamINode
+      case object EIn      extends RSAParamINode
+      case object P        extends RSAParamNode
+      case object Q        extends RSAParamNode
+      case object PxQ      extends RSAParamNode
+      case object PQ       extends RSAParamNode
+      case object N        extends RSAParamNode
+      case object Phi      extends RSAParamNode
+      case object E        extends RSAParamNode
+      case object ExPhi    extends RSAParamNode
+      case object EPhi     extends RSAParamNode
+      case object DE       extends RSAParamNode
+      case object DExN     extends RSAParamNode
+      case object DEN      extends RSAParamNode
+    sealed trait RSAParamEdge extends EdgeOf[RSAParamNode]
+    object RSAParamEdge:
+      import RSAParamNode.*
+      case object PIn_to_P      extends Edge(PIn  , P    ) with RSAParamEdge
+      case object QIn_to_Q      extends Edge(QIn  , Q    ) with RSAParamEdge
+      case object EIn_to_E      extends Edge(EIn  , E    ) with RSAParamEdge
+      case object P_to_PxQ      extends Edge(P    , PxQ  ) with RSAParamEdge
+      case object Q_to_PxQ      extends Edge(Q    , PxQ  ) with RSAParamEdge
+      case object PxQ_to_PQ     extends Edge(PxQ  , PQ   ) with RSAParamEdge
+      case object PQ_to_N       extends Edge(PQ   , N    ) with RSAParamEdge
+      case object PQ_to_Phi     extends Edge(PQ   , Phi  ) with RSAParamEdge
+      case object E_to_ExPhi    extends Edge(E    , ExPhi) with RSAParamEdge
+      case object Phi_to_ExPhi  extends Edge(Phi  , ExPhi) with RSAParamEdge
+      case object ExPhi_to_EPhi extends Edge(ExPhi, EPhi ) with RSAParamEdge
+      case object EPhi_to_DE    extends Edge(EPhi , DE   ) with RSAParamEdge
+      case object N_to_DExN     extends Edge(N    , DExN ) with RSAParamEdge
+      case object DE_to_DExN    extends Edge(DE   , DExN ) with RSAParamEdge
+      case object DExN_to_DEN   extends Edge(DExN , DEN  ) with RSAParamEdge
+
+
+
+    // sealed class RSAParamEdge(in: RSAParamNode, out: RSAParamNode) extends EdgeOf[RSAParamNode]:
+    //   def canEqual(that: Any): Boolean = that.isInstanceOf[RSAParamEdge]
+    //   def _1: RSAParamNode = in
+    //   def _2: RSAParamNode = out
+    // object RSAParamEdge:
+    //   import RSAParamNode.*
+    //   case object PIn_to_P      extends RSAParamEdge(PIn  , P    )
+    //   case object QIn_to_Q      extends RSAParamEdge(QIn  , Q    )
+    //   case object EIn_to_E      extends RSAParamEdge(EIn  , E    )
+    //   case object P_to_PxQ      extends RSAParamEdge(P    , PxQ  )
+    //   case object Q_to_PxQ      extends RSAParamEdge(Q    , PxQ  )
+    //   case object PxQ_to_PQ     extends RSAParamEdge(PxQ  , PQ   )
+    //   case object PQ_to_N       extends RSAParamEdge(PQ   , N    )
+    //   case object PQ_to_Phi     extends RSAParamEdge(PQ   , Phi  )
+    //   case object E_to_ExPhi    extends RSAParamEdge(E    , ExPhi)
+    //   case object Phi_to_ExPhi  extends RSAParamEdge(Phi  , ExPhi)
+    //   case object ExPhi_to_EPhi extends RSAParamEdge(ExPhi, EPhi )
+    //   case object EPhi_to_DE    extends RSAParamEdge(EPhi , DE   )
+    //   case object N_to_DExN     extends RSAParamEdge(N    , DExN )
+    //   case object DE_to_DExN    extends RSAParamEdge(DE   , DExN )
+    //   case object DExN_to_DEN   extends RSAParamEdge(DExN , DEN  )
+    //   val rpe: RSAParamEdge = ???
+    //   val x = rpe match
+    //     case RSAParamEdge(in,out) => ???
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // object testgraph_cyclic_sealed extends GraphSpec:
+  //   val spec = simlei.graphs.ExampleGraphDef.rsaparams
+  //   val defs = testgraph_sealed_definitions
+  //   import spec.defs.RSAParamNode.*
+
+  //   override type NodeT      = spec.defs.RSAParamNode
+  //   override type InputNodeT = spec.defs.RSAParamINode
+  //   override val edges       = defs.edges ++ List( // these result in two loops, one of them with two entry points
+  //       N     -> PxQ,
+  //       DE    -> Phi,
+  //     )
+  //   override val nodes       = List(PIn, QIn, P, Q, PxQ, PQ, N, Phi, EIn, E, ExPhi, EPhi, DE, DExN, DEN)
+  //   override val inputnodes  = List(PIn, QIn, EIn)

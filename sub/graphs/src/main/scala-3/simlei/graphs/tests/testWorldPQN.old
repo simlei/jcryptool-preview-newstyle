@@ -1,0 +1,44 @@
+// package simlei.graphs.tests
+// import simlei.graphs.*
+
+// object testWorldPQN:
+//   object defs:
+//     sealed trait Knoten
+//     sealed trait InKnoten extends Knoten // the input nodes
+//     object Knoten:
+//       case object P        extends InKnoten
+//       case object Q        extends InKnoten
+//       case object PQ        extends Knoten
+//     sealed trait TestEdge extends EdgeOf[Knoten]
+//     object TestEdge:
+//       import Knoten.*
+//       case object P_to_N extends BiEdge(P, PQ) with TestEdge
+//       case object Q_to_N extends BiEdge(Q, PQ) with TestEdge
+
+//   import defs.Knoten.*
+//   import defs.TestEdge.*
+
+//   object graph extends GraphSpec:
+//     override type NodeT      = defs.Knoten
+//     override type EdgeT      = defs.TestEdge
+//     override type InputNodeT = defs.InKnoten
+//     override val edges       = List(P_to_N, Q_to_N)
+//     override val nodes       = List(P, Q, PQ)
+//     override val inputnodes  = List(P, Q)
+//   end graph
+//   val dag = IDAG.ofLists(graph.nodes, graph.edges, graph.inputnodes)
+
+//   object domain extends DomainSpec(graph):
+//     override type TypeOf[NT <: graph.NodeT] = NT match
+//       case P.type => BigInt
+//       case Q.type => BigInt
+//       case PQ.type => (BigInt, BigInt)
+
+//   object validation extends ValidationSpec(domain):
+//     override type Error[NT <: graph.NodeT] = NT match
+//       case P.type => "nonpositive" | "not_prime"
+//       case Q.type => "nonpositive" | "not_prime"
+//       case PQ.type => "both_equal"
+
+//   object content extends ContentSpec(validation)
+

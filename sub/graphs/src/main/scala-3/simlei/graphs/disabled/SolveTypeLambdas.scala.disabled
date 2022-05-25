@@ -1,0 +1,29 @@
+// package simlei.graphs
+
+// object WTF:
+//   @main def WTFMain(): Unit =
+//     sealed trait ExNode
+//     sealed trait ExInputNode extends ExNode
+//     object ExNode:
+//       case object P        extends ExInputNode
+//       case object PQ       extends ExInputNode
+//       case object D       extends ExNode
+
+//     type InputContentT[INT <: ExNode] = INT match
+//       case ExNode.P.type =>   BigInt
+//       case ExNode.PQ.type =>    (BigInt,BigInt)
+
+//     type ContentT[NT <: ExNode] = NT match
+//       case ExInputNode => InputContentT[NT]
+//       case ExNode.D.type =>    Unit
+
+//     type DefaultValueProvider = (inode: ExInputNode) => ContentT[inode.type]
+
+//     // this does not work though. error in next code block.
+//     val defaults: DefaultValueProvider = in => in match
+//       case node: ExNode.P.type => 3
+//       case node: ExNode.PQ.type => (3,7)
+
+//     println(defaults(ExNode.P))
+//     println(defaults(ExNode.PQ))
+// end WTF

@@ -1,0 +1,17 @@
+// package simlei.graphs
+// import SMDemoTut.*
+// object MacroPrintingDemo:
+//   enum Bla:
+//     case B1
+//     case B2
+//   @main def MacroPrintingDemoMain(): Unit =
+//     println("-".repeat(80))
+
+//     example4.myDbg(Bla.B1)
+
+//     // this one prints during compilation // TODO: make it output the source location — and in line with generic compiler
+//     // example5.PrintTree.printTree {
+//     //   (s: String) => s.length
+//     // }
+
+//     println("-".repeat(80))

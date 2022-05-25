@@ -1,0 +1,14 @@
+// package simlei.graphs.constructs
+
+// trait Foo
+// case class ISB(i: Int, s: String, b: Boolean) extends Foo
+// case class A(sA: String, isb: ISB) extends Foo
+// case class B(iB: Int, isb: ISB) extends Foo
+// case class C(bC: Boolean, isb: ISB) extends Foo
+// val isb1 = ISB(1, "2", false)
+// val isb2 = ISB(2, "3", true)
+// val isb3 = ISB(3, "4", false)
+// val a1 = A("obj_A", isb1)
+// val b1 = B(22, isb2)
+// val c1 = C(true, isb2)
+

@@ -1,0 +1,39 @@
+// package simlei.graphs
+// import MacroTools.*
+
+// object MacroDemo {
+//   case class IS(i: Int, s: String) {
+//     def blub(param: String): Unit = println("Hi with " + param)
+//   }
+//   case class B(b: Boolean)
+
+//   @main def MacroDemoMain(): Unit = {
+//     // println(sumNow(1, 2, 3))
+//     // println(make[IS](1, "test"))
+
+//     // assembles a constructor call from the provided args
+//     // but I think this is useless...
+//     // enter typetag...
+//     // import izumi.reflect.*
+//     // val tag1 = Tag[IS].tag
+
+//     // println(make[org.bouncycastle.crypto.engines.AESEngine]())
+//     // println(make[IS]())
+    
+//     inspectConstr[IS](List(), List(128))
+//     println("end")
+    
+
+//     // def WorldGetter: String = "World"
+//     // inspect(Seq(1, 2, 3))
+
+//     // inspectList(List("Hello", WorldGetter))
+//     // inspectSeqAsVA(Seq("Hello", WorldGetter))
+//     // inspectVarargsAsVA("Hello", WorldGetter)
+
+//       // inspectVarargs[IS](Seq("Hello", "World"))
+//     // println(inspectType[IS])
+//     // debugSingle((IS(1, "foo"), B(true)))
+//   }
+// }
+

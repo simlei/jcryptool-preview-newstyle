@@ -1,0 +1,32 @@
+// package simlei.graphs.tests
+// import simlei.graphs.*
+
+// object testWorldSingle:
+//   object defs:
+//     sealed trait Knoten
+//     sealed trait InKnoten extends Knoten
+//     object Knoten:
+//       case object P        extends InKnoten
+//     end Knoten
+//     sealed trait TestEdge extends EdgeOf[Knoten]
+//     object TestEdge:
+//     end TestEdge
+
+//   import defs.Knoten.*
+//   import defs.TestEdge.*
+
+//   object gSpec extends GraphSpec:
+
+//     override type NodeT      = defs.Knoten
+//     override type EdgeT      = defs.TestEdge
+//     override type InputNodeT = defs.InKnoten
+//     override val edges       = List()
+//     override val nodes       = List(P)
+//     override val inputnodes  = List(P)
+
+//   val dag = IDAG.ofLists(gSpec.nodes, gSpec.edges, gSpec.inputnodes)
+
+//   // object domain extends DomainSpec[gSpec.type](gSpec):
+//   //   override type TypeOf[NT] = NT match
+//   //     case P.type   => BigInt
+

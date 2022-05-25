@@ -1,0 +1,209 @@
+package simlei.graphs.tests
+
+import simlei.graphs.*
+import simlei.util.*
+import cats.Show
+
+
+
+@main def ExampleGraphTestsMain(): Unit =
+  // test1.run()
+  // test3.run()
+  // test4.run()
+  // test6.run()
+  // test7.run()
+  // test8.run()
+  test9.run()
+
+    // test5.run() // TODO: reactivate cyclic tests
+    // test2.run() // TODO: reactivate cyclic tests
+
+
+// object test3:
+//   // fringe cases
+//   def run() =
+//     IDAG.of()()().isEmpty.dbgprinting("empty GDAG") // empty GDAG
+//     val loop1 = Connectivity.ofEdges("A" -> "A")
+//     loop1.cyclicWalks.dbgprinting("smallest loop")
+//     val loop2 = Connectivity.ofEdges("A" -> "B", "B" -> "C", "C" -> "B")
+//     loop2.cyclicWalks.dbgprinting("smallest incompletely-looped graph")
+
+// 1) the proper graph as IDAG
+object test4:
+  val testName = "RSA-REGULAR"
+  val spec = simlei.graphs.ExampleGraphDef.rsaparams
+  import spec.defs.RSAParamNode.*
+
+  def run() =
+    val dag = IDAG.ofLists(spec.nodes, spec.edges, spec.inputnodes)
+    assert(dag.walks.size == 5)
+    val walk1 = Walk.of(PIn, P, PxQ, PQ, N, DExN, DEN)
+    val walk2 = Walk.of(QIn, Q, PxQ, PQ, N, DExN, DEN)
+    val walk3 = Walk.of(EIn, E, ExPhi, EPhi, DE, DExN, DEN)
+    val walk4 = Walk.of(PIn, P, PxQ, PQ, Phi, ExPhi, EPhi, DE, DExN, DEN)
+    val walk5 = Walk.of(QIn, Q, PxQ, PQ, Phi, ExPhi, EPhi, DE, DExN, DEN)
+    assert(dag.walks.contains(walk1))
+    assert(dag.walks.contains(walk2))
+    assert(dag.walks.contains(walk3))
+    assert(dag.walks.contains(walk4))
+    assert(dag.walks.contains(walk5))
+    dag.walks.dbglisting(s"$testName:dag.walks")
+    dag.reverseWalks.dbglisting(s"$testName:reverse-dag.walks")
+
+
+object test7:
+  def run() =
+    val spec = simlei.graphs.ExampleGraphDef.rsaparams
+    import spec.defs.RSAParamNode.*
+    println(" <insert tests here...> ")
+
+    sealed trait Key { type CT }; object Key:
+      case object Ki extends Key
+      case object Kb extends Key
+      case object Kib extends Key
+      case object Ks extends Key
+    trait GEdge {
+      type From <: Key
+      type To <: Key
+      val from: From
+      val to: To
+    }
+    class Edg[I<:Key,O<:Key](val from: I, val to: O) extends GEdge {type From=I;type To=O}; object Edg:
+      def unapply[I<:Key,O<:Key](e: Edg[I,O]) = (e.from,e.to)
+    sealed trait MyEdg; object MyEdg:
+      case object E1 extends Edg(Key.Ki, Key.Kib)
+      case object E2 extends Edg(Key.Kb, Key.Kib)
+      case object E3 extends Edg(Key.Kib, Key.Ks)
+      
+    trait Top:
+      type Content <: ([T <: Key] =>> Any)
+      type StateTf = CData => CData
+
+      type Impl = (edge: GEdge) => Content[edge.from.type] => (Content[edge.to.type] => Content[edge.to.type])
+
+      // type ImplLinear <: Impl
+      // type ImplProduct <: Impl
+
+      // def implToTf[E <: GEdge](edge: E, impl: Impl): StateTf = 
+      //   val fun = impl(edge)
+      //   ???
+      //   return before => {
+      //     val oldVal = before.get(edge.to).asInstanceOf[]
+      //     val newVal = fun()
+      //     before :+ (edge.to -> newVal)
+      //   }
+
+    // object Here extends Top:
+    //   override type Content = [T <: Key] =>> T match
+    //     case Key.Ki.type  => Int
+    //     case Key.Kb.type  => Boolean
+    //     case Key.Kib.type => (Int,Boolean)
+    //     case Key.Ks.type  => String
+
+
+
+      // def makeLinearImpl[E <: GEdge](edge: E)(impl: Impl): AllDataSet =
+      //   val fun = impl(edge)
+      //   return before => {
+      //     val oldVal = before.get(edge.to)
+      //     val newVal = fun()
+      //     before :+ (edge.to -> newVal)
+      //   }
+
+      // val 
+
+    // val t2 : (Int, String)
+    // val t3 : (Int, String, Boolean)
+
+// object test8:
+//   val testName = "RSA-sequentialize"
+//   val spec = simlei.graphs.ExampleGraphDef.rsaparams
+//   val cspec = ExampleGraphInterpretation.RSAParamsCSpec
+//   import spec.defs.RSAParamNode.*
+//   def run() =
+//     val dag = IDAG.ofLists(spec.nodes, spec.edges, spec.inputnodes)
+//     dag.walks.dbglisting(s"$testName:dag.walks")
+//     dag.reverseWalks.dbglisting(s"$testName:reverse-dag.walks")
+//     // dag.edgewalks.dblisting(s"$testName:edgewalks")
+//     println("-- ".repeat(30))
+//     val walks = dag.edgewalks.dbglisting(s"$testName:edgewalks")
+//     val linearized = dag.linearize(walks).dbglisting(s"$testName:linearized")
+
+
+
+
+
+  // object testValidation extends ValidationSpec[testGSpec.type, testDomain.type](testDomain):
+  //   import testGSpec.defs.TestNode.*
+  //   override type TypeOf[NT] = NT match
+  //     case P.type => Right[Nothing, testDomain.TypeOf[P.type]]
+
+object test9:
+  val testName = "TEST-sequentialize"
+
+  def run() =
+    val world = tests.testWorldPQN
+    val dag = world.dag
+    import world.defs.Knoten.*
+
+    // dag.walks.dbglisting(s"$testName:dag.walks")
+    // dag.reverseWalks.dbglisting(s"$testName:reverse-dag.walks")
+    // println("-- ".repeat(30))
+    // val walks = dag.edgewalks.dbglisting(s"$testName:edgewalks")
+    // val linearized = dag.linearize(walks).dbglisting(s"$testName:linearized")
+
+    // world.domain
+
+    println("--".repeat(30))
+    val nVal: (BigInt, BigInt) = (1,2)
+    println("--".repeat(30))
+
+
+
+
+
+
+
+
+
+
+    // import spec.defs.RSAParamNode.*
+    // val defaults: cspec.InputAssigner = inode => inode match
+    //   case node: PIn.type => 3
+    //   case node: QIn.type => 11
+    //   case node: EIn.type => 7
+
+    // TODO: add refined EdgeT (better than NodexNode -> have a function like Content that assigns impl)
+  // val impl: cspec.EdgeImpl = (in,out) => (in,out) match
+  //   case EdgeOf(PIn, P) => ???
+  //   case EdgeOf(QIn, Q) => ???
+  // val circuit = cspec.makeCircuit(defaults, impl)
+  // circuit.print_defaults
+
+
+
+// object test2:
+//   val testName = "CYCLIC"
+//   import simlei.graphs.ExampleGraphDef.testgraph_cyclic_sealed.*
+//   import simlei.graphs.ExampleGraphDef.testgraph_cyclic_sealed.ExNode.*
+
+//   def run() =
+//     // val conn = Connectivity(nodes, edges)
+//     val connectivity = Connectivity.ofLists(nodes, edges)
+//     val distinctCycles = connectivity.cyclicWalks.map{_.cycle}.distinct.dbglisting(s"$testName:distinctCycles")
+//     assert(connectivity.acyclicWalks.size == 5)
+//     assert(distinctCycles.size == 3)
+//     // assert(distinctCycles.size == 2) // although semantically correct, two cycles start at different points. This may be useful (every possible entry point to a cycle is covered) so we keep this behavior.
+//     val walk1 = Walk.of(PIn, P, PxQ, PQ, N, DExN, DEN)
+//     val walk2 = Walk.of(QIn, Q, PxQ, PQ, N, DExN, DEN)
+//     val walk3 = Walk.of(EIn, E, ExPhi, EPhi, DE, DExN, DEN)
+//     val walk4 = Walk.of(PIn, P, PxQ, PQ, Phi, ExPhi, EPhi, DE, DExN, DEN)
+//     val walk5 = Walk.of(QIn, Q, PxQ, PQ, Phi, ExPhi, EPhi, DE, DExN, DEN)
+//     assert(connectivity.acyclicWalks.contains(walk1))
+//     assert(connectivity.acyclicWalks.contains(walk2))
+//     assert(connectivity.acyclicWalks.contains(walk3))
+//     assert(connectivity.acyclicWalks.contains(walk4))
+//     assert(connectivity.acyclicWalks.contains(walk5))
+//     // cycles.dbglisting(s"$testName:cycles")
+//     // walks.dbglisting(s"$testName:walks")
+

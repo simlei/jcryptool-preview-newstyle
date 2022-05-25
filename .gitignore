@@ -16,3 +16,4 @@
 /.idea/modules/bci_logic-build.iml
 /.idea/scala_compiler.xml
 /**/*.semanticdb
+/.idea/

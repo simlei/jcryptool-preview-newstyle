@@ -1,0 +1,306 @@
+package simlei.graphs
+import simlei.util.*
+
+@main def ExampleGraphInterpretationMain(): Unit =
+  val spec = simlei.graphs.ExampleGraphDef.rsaparams
+  val cspec = ExampleGraphInterpretation.RSAParamsCSpec
+
+  import spec.defs.RSAParamNode.*
+  import cspec.*
+  // // val pI3 = BigInt(3)
+  // // val pI2 = 
+  // val pDefault: InputContentT[PIn.type] = ???
+  // val pDefaultGen: InputContentT[InputNodeT] = ???
+  // // Right[Nothing,InputValidation[PIn.type]](Right(BigInt(3)))
+  // val defaults: InputAssigner = inode => inode match
+  //   case node: PIn.type => pDefaultGen
+  //   // case node: PIn.type => Right(Right(BigInt(3)))
+  //   case node: QIn.type => Left(GenError.NotSet)
+  //   case node: EIn.type => Left(GenError.NotSet)
+    // case node: PIn.type => Right(Right(3))
+    // case node: QIn.type => Right(Right(11))
+    // case node: EIn.type => Right(Right(7))
+
+    // TODO: add refined EdgeT (better than NodexNode -> have a function like ContentT that assigns impl)
+  // val impl: cspec.EdgeImpl = (in,out) => (in,out) match
+  //   case EdgeOf(PIn, P) => ???
+  //   case EdgeOf(QIn, Q) => ???
+  // val circuit = cspec.makeCircuit(defaults, impl)
+  // circuit.print_defaults
+
+
+
+object ExampleGraphInterpretation:
+
+  object RSAParamsCSpec:
+    val origSpec = ExampleGraphDef.rsaparams
+    val defs = origSpec.defs
+    import defs.RSAParamNode.* // pull the node names into local scope
+
+    case class PQData(p: BigInt, q: BigInt)
+    case class EPhiData(e: BigInt, phi: BigInt)
+    case class DEData(d: BigInt, e: BigInt)
+    case class DENData(d: BigInt, e: BigInt, n: BigInt)
+
+    sealed trait Validator
+    case object NotPrime extends Validator
+    case object NotPositive extends Validator
+    case object EMustBeSmallerThanPhi extends Validator
+    case object EMustBeGreaterThanOne extends Validator
+    case object EMustBeCoprimeWithPhi extends Validator
+    // case object PlaintextMustBeSmallerThanN(plain: BigInt, edn: EDNData) extends Err
+
+    type ValiErr = Validator
+
+    // override type InputDomain[NT] = NT match
+    //   case PIn.type   => BigInt
+    //   case QIn.type   => BigInt
+    //   case EIn.type   => BigInt
+    // override type Domain[NT] = NT match
+    //   case InputNodeT => InputDomain[NT]
+    //   case P.type     => BigInt
+    //   case Q.type     => BigInt
+    //   case PxQ.type   => (BigInt,BigInt)
+    //   case PQ.type    => PQData
+    //   case N.type     => BigInt
+    //   case Phi.type   => BigInt
+    //   case E.type     => BigInt
+    //   case ExPhi.type => (BigInt,BigInt)
+    //   case EPhi.type  => EPhiData
+    //   case DE.type    => DEData
+    //   case DExN.type  => (DEData,BigInt)
+    //   case DEN.type   => DENData
+
+    // override type Validation  [NT] = NT match
+    //   // case InputNodeT => InputValidation[NT]
+    //   case P.type     => Either[NotPrime.type|NotPositive.type, Domain[NT]]
+    //   case _ => Nothing
+    // override type InputValidation [NT] = NT match
+    //   case PIn.type => Right[Nothing,InputDomain[NT]]
+    //   case _ => Nothing
+    //   // case QIn.type => Right[Nothing,InputDomain[NT]]
+    //   // case EIn.type => Right[Nothing,InputDomain[NT]]
+
+
+
+    // override type InputContentT[NT <: InputNodeT] = Either[GenError.NotSet.type, InputValidation[NT]]
+
+    // type InputValidation[NT <: InputNodeT] = NT match
+    //   case PIn.type => IAlways[PIn.type]
+    //   case QIn.type => IAlways[NT]
+    //   case EIn.type => IAlways[NT]
+
+    // type Domain[NT <: NodeT] = NT match
+    //   case InputNodeT => InputDomain[NT]
+    //   case P.type     => BigInt
+    //   case Q.type     => BigInt
+    //   case PxQ.type   => (BigInt,BigInt)
+    //   case PQ.type    => PQData
+    //   case N.type     => BigInt
+    //   case Phi.type   => BigInt
+    //   case E.type     => BigInt
+    //   case ExPhi.type => (BigInt,BigInt)
+    //   case EPhi.type  => EPhiData
+    //   case DE.type    => DEData
+    //   case DExN.type  => (DEData,BigInt)
+    //   case DEN.type   => DENData
+
+    // type Validation[NT <: NodeT] = NT match
+    //   case InputNodeT => InputValidation[NT]
+    //   case P.type     => Sometimes[NotPrime.type|NotPositive.type, NT]
+    //   case Q.type     => Sometimes[NotPrime.type|NotPositive.type, NT]
+    //   case PxQ.type   => Always[NT]
+    //   case PQ.type    => Always[NT]
+    //   case N.type     => Always[NT]
+    //   case Phi.type   => Always[NT]
+    //   case E.type     => Sometimes[NotPositive.type, NT]
+    //   case ExPhi.type => Always[NT]
+    //   case EPhi.type  => Sometimes[EMustBeSmallerThanPhi.type|EMustBeGreaterThanOne.type|EMustBeCoprimeWithPhi.type, NT]
+    //   case DE.type    => Always[NT]
+    //   case DExN.type  => Always[NT]
+    //   case DEN.type   => Always[NT]
+
+    // override type ContentT[NT <: NodeT] = Either[GenError, Validation[NT]]
+
+
+
+
+
+
+
+
+
+  // object MappedGraphTest:
+  //   val origGraph = testgraph.gdag
+  //   type NodeT = origGraph.NodeT
+  //   type EdgeT = origGraph.EdgeT
+
+  //   // just for easy access
+  //   val Node = testgraph.ExNode
+
+  //   trait TypedNode[N, DataT](origNode: N)
+  //   object TypedNode:
+  //     def of[ONode, ContentT](node: ONode) = new TypedNode[ONode,ContentT](node) {}
+
+  //   trait TypedEdgeEnv[InNode, OutNode] {
+  //     type IN=InNode
+  //     type ON=OutNode
+  //     def infer[InType,OutType](using TypedNode[InNode, InType], TypedNode[OutNode, OutType]) = new TypedEdge[InNode,OutNode, InType, OutType](this) {}
+  //   }
+  //   trait TypedEdge[InNode, OutNode, InType, OutType](val edgeEnv: TypedEdgeEnv[InNode, OutNode]) {
+  //     type IT=InType
+  //     type OT=OutType
+  //   }
+  //   object TypedEdge:
+  //     def of[InNode, OutNode](inNode: InNode, outNode: OutNode) = new TypedEdgeEnv[InNode,OutNode] {}
+
+  //   // this doesn't work because of using clauses...
+  //   // val t3st: ImplFor[PQ.type,N.type,PQData,BigInt] = (pq: PQData) => pq.p
+
+  //   // @FunctionalInterface trait FImpl[EdgeT,-In,+Out] {
+  //   //   def apply(in: In): Out
+  //   // }
+
+  //   given PIn_Mapped   : TypedNode[Node.PIn.type,   BigInt]         = TypedNode.of(Node.PIn)
+  //   given QIn_Mapped   : TypedNode[Node.PIn.type,   BigInt]         = TypedNode.of(Node.PIn)
+  //   given EIn_Mapped   : TypedNode[Node.EIn.type,   BigInt]         = TypedNode.of(Node.EIn)
+  //   given P_Mapped     : TypedNode[Node.P.type,     BigInt]         = TypedNode.of(Node.P)
+  //   given Q_Mapped     : TypedNode[Node.Q.type,     BigInt]         = TypedNode.of(Node.Q)
+  //   given PxQ_Mapped   : TypedNode[Node.PxQ.type,   (BigInt,BigInt)]= TypedNode.of(Node.PxQ)
+  //   given PQ_Mapped    : TypedNode[Node.PQ.type,    PQData]         = TypedNode.of(Node.PQ)
+  //   given N_Mapped     : TypedNode[Node.N.type,     BigInt]         = TypedNode.of(Node.N)
+  //   given Phi_Mapped   : TypedNode[Node.Phi.type,   BigInt]         = TypedNode.of(Node.Phi)
+  //   given E_Mapped     : TypedNode[Node.E.type,     BigInt]         = TypedNode.of(Node.E)
+  //   given ExPhi_Mapped : TypedNode[Node.ExPhi.type, (BigInt,BigInt)]= TypedNode.of(Node.ExPhi)
+  //   given EPhi_Mapped  : TypedNode[Node.EPhi.type,  EPhiData]       = TypedNode.of(Node.EPhi)
+  //   given DE_Mapped    : TypedNode[Node.DE.type,    DEData]         = TypedNode.of(Node.DE)
+  //   given DExN_Mapped  : TypedNode[Node.DExN.type,  (DEData,BigInt)]= TypedNode.of(Node.DExN)
+  //   given DEN_Mapped   : TypedNode[Node.DEN.type,   DENData]        = TypedNode.of(Node.DEN)
+
+  //   val PQ_N = TypedEdge.of(Node.P,Node.Q).infer
+
+  //   val nodes = List(PIn_Mapped, QIn_Mapped, EIn_Mapped, P_Mapped, Q_Mapped, PxQ_Mapped, PQ_Mapped, N_Mapped, Phi_Mapped, E_Mapped, ExPhi_Mapped, EPhi_Mapped, DE_Mapped, DExN_Mapped, DEN_Mapped)
+
+
+
+    // object PQNEnv extends EdgeEnv[PQ.type, N.type] { }
+    // val typed = PQNEnv.typed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ------
+    //
+    // TODO: 2nd best thing -- keep!
+    // trait ImplFor[IN,ON,IT,OT](using TypedNode[IN,IT], TypedNode[ON,OT]):
+    //   def impl(input: IT): OT
+    // object ImplFor:
+    //   def of[IN,ON,IT,OT](inNode: IN, outNode: ON)(fun: IT => OT)(using TypedNode[IN,IT], TypedNode[ON,OT]): ImplFor[IN,ON,IT,OT] =
+    //     new ImplFor[IN,ON,IT,OT] {
+    //       override def impl(input: IT): OT = fun(input)
+    //     }
+    // given ImplFor[PQ.type, N.type, PQData, BigInt] = ImplFor.of(PQ,N){ pq =>
+    //   (pq.p + 1)*(pq.q + 1)
+    // }
+    // def test1[ONodeIn,ONodeOut,InT,OutT](in: ONodeIn, out: ONodeOut)
+    //   (using tt1:TypedNode[ONodeIn,InT], tt2:TypedNode[ONodeOut, OutT], impl: ImplFor[ONodeIn,ONodeOut,InT,OutT] ): InT => OutT =
+    //     (inputForLambda: InT) => impl.impl(inputForLambda)
+    // val myFun = test1(PQ,N)
+
+    // ------ try-n-error that did not pan out that well...
+
+    // trait EdgeMeaning[InNode,OutNode] {
+    //   def computation(env: EdgeEnv[InNode,OutNode]): env.IT => env.OT
+    // }
+
+    // trait ImplFor3[IN,ON]:
+    //   def withTypes[IT,OT](in: IT)(using TypedNode[IN,IT], TypedNode[ON,OT]): OT
+    // object ImplFor3:
+    //   def of[IN,ON,IT,OT](inNode: IN, outNode: ON)(fun: (TypedNode[IN,IT], TypedNode[ON,OT]) ?=> IT => OT): ImplFor3[IN,ON] =
+    //     new ImplFor3[IN,ON] {
+    //       override def withTypes[IT,OT](in: IT)(using TypedNode[IN,IT], TypedNode[ON,OT]): OT = fun(in)
+    //     }
+
+    // trait ImplFor2[IN,ON]:
+      // def withTypes[IT,OT](fun: IT => OT)(using TypedNode[IN,IT], TypedNode[ON,OT]) =
+      //   fun // works with (2),(3)
+
+
+    // val x = new ImplFor3[PQ.type, N.type] {
+    //   override def withTypes[IT,OT](pq: IT)(using TypedNode[IN,IT], TypedNode[ON,OT]): O =
+    //     val x = pq
+    //     x.p
+    // }
+    // val y = x.withTypes // works, but only slight improvement
+
+    // val x = new ImplFor2[PQ.type, N.type] { }
+    // val y = x.withTypes((pq: PQData) => pq.q) // (3) works, but only slight improvement
+    // val y = x.withTypes[PQData, BigInt](pq => pq.q) // (2) works, but no real improvement
+
+
+
+
+
+
+  // object Err {
+  //   case class  ParseErr              (e: Parsing.ParseErr)            extends Err { export e.* }
+  //   case class  IsNoPrime             (p: BigInt)                      extends Err
+  //   case class  SameValueNotAllowedFor(node1: NodeAny, node2: NodeAny) extends Err
+  //   case class  EMustBeSmallerThanPhi (e: BigInt, phi: BigInt)         extends Err
+  //   case object EMustBeGreaterThanOne                                  extends Err
+  //   case class  EMustBeCoprimeWithPhi (e: BigInt, phi: BigInt)         extends Err
+  //   case class  MustBePositive (value: BigInt)         extends Err
+  //   case class  PlaintextMustBeSmallerThanN(plain: BigInt, edn: EDNData) extends Err
+  // }
+
+
+
+
+
+    // val PInData = NodeData[PIn.type, BigInt](PIn, 1)
+    // def interpretNode[Content](node: Node) =
+
+    // graph.edges
+
+
+
+    // case object PIn_Mapped   extends TypedNode[PIn.type,   BigInt]         (PIn)
+    // case object QIn_Mapped   extends TypedNode[PIn.type,   BigInt]         (PIn)
+    // case object EIn_Mapped   extends TypedNode[EIn.type,   BigInt]         (EIn)
+    // case object P_Mapped     extends TypedNode[P.type,     BigInt]         (P)
+    // case object Q_Mapped     extends TypedNode[Q.type,     BigInt]         (Q)
+    // case object PxQ_Mapped   extends TypedNode[PxQ.type,   (BigInt,BigInt)](PxQ)
+    // case object PQ_Mapped    extends TypedNode[PQ.type,    PQData]         (PQ)
+    // case object N_Mapped     extends TypedNode[N.type,     BigInt]         (N)
+    // case object Phi_Mapped   extends TypedNode[Phi.type,   BigInt]         (Phi)
+    // case object E_Mapped     extends TypedNode[E.type,     BigInt]         (E)
+    // case object ExPhi_Mapped extends TypedNode[ExPhi.type, (BigInt,BigInt)](ExPhi)
+    // case object EPhi_Mapped  extends TypedNode[EPhi.type,  EPhiData]       (EPhi)
+    // case object DE_Mapped    extends TypedNode[DE.type,    DEData]         (DE)
+    // case object DExN_Mapped  extends TypedNode[DExN.type,  (DEData,BigInt)](DExN)
+    // case object DEN_Mapped   extends TypedNode[DEN.type,   DENData]        (DEN)
+
+  // type InputNodeT[DAGT <: IODAG[_,_]] = DAGT match
+  //   case IODAG[n,i] => i
+  // type NodeT[DAGT <: IODAG[_,_]] = DAGT match
+  //   case IODAG[n,i] => n
+  // type EdgeT[DAGT <: IODAG[_,_]] = DAGT match
+  //   case IODAG[n,i] => (n,n)

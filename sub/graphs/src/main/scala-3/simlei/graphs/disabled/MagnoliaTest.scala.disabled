@@ -1,0 +1,51 @@
+// package simlei.graphs
+// import magnolia1.*
+// import magnolia1.CaseClass.Param
+// // import com.github.arturopala.tree.*
+
+// trait MPrint[T] {
+//   extension (x: T) def print: String
+// }
+// object MPrint extends AutoDerivation[MPrint]:
+//   def join[T](ctx: CaseClass[Typeclass, T]): MPrint[T] = (value: T) =>
+//     ctx.params.map { (param: Param[Typeclass, T]) =>
+//       println(s"value: ${value}")
+//       println(s"ctx: ${ctx}")
+//       println(s"param: ${param}")
+//       println(s"param.typeclass: ${ param.typeclass }")
+//       param.typeclass.print(param.deref(value))
+//     }.mkString(s"${ctx.typeInfo.short}(", ",", ")")
+
+//   override def split[T](ctx: SealedTrait[MPrint, T]): MPrint[T] = value =>
+//     ctx.choose(value) { sub => sub.typeclass.print(sub.cast(value)) }
+  
+//   given MPrint[Int] = _.toString
+
+
+// enum MTree[+T] derives MPrint:
+//   case MBranch(left: MTree[T], right: MTree[T])
+//   case MLeaf(value: T)
+
+// object graphs:
+//   @main def MagnoliaTestMain(): Unit =
+//     println("hello from " + graphs)
+//   import simlei.graphs.constructs.*
+//   import MTree.*
+//   val t1 = MBranch(MLeaf(a1), MBranch(MLeaf(b1), MLeaf(isb1)))
+//   val t2 = MBranch(MLeaf(a1), MBranch(MLeaf(c1), MLeaf(isb2)))
+//   val t3 = MBranch(MLeaf(1), MBranch(MLeaf(2), MLeaf(3)))
+
+//   given MPrint[Foo] = _.toString
+//   println(isb1.print)
+//   println(a1.print)
+//   println(b1.print)
+//   println(c1.print)
+//   println(">< ".repeat(30))
+//   println(t3.print)
+//   println("<> ".repeat(30))
+//   println(">< ".repeat(30))
+//   println(t1.print)
+//   println("<> ".repeat(30))
+
+// end graphs
+

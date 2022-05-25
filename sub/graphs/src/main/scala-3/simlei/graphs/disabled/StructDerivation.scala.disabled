@@ -1,0 +1,9 @@
+// package simlei.graphs
+// import simlei.graphs.constructs.*
+
+// object StructDerivation:
+//   @main def StructDerivationMain(): Unit =
+//     println("hello from " + StructDerivation)
+//     println(">< ".repeat(40))
+//     println("<> ".repeat(40))
+// end StructDerivation

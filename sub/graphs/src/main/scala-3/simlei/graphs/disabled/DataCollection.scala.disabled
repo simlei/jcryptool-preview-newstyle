@@ -1,0 +1,16 @@
+// package simlei.graphs
+// import simlei.util.*
+
+// // trait DataCollection[-KT,+DT](val data: Map[Any,DT]):
+// //   def get(key: KT): DT = data.get(key).get
+// // trait AnyDataCollection(override val data: Map[Any,Any]) extends DataCollection[Any,Any]
+
+// // // class Data[-KT,+DT] private(data: Map[Any, DT]) extends DataCollection[KT,DT](data)
+// // case class KData[-KT,+DT] private(data: Map[Any, DT]) extends DataCollection[KT,DT](data)
+
+// // case class Datamap[+DT] private(data: Map[Any, Any])
+// // object Datamap:
+// //   // extension[KT,DT](self: DataCollection[KT,DT])
+// //   extension[DT](self: Datamap[DT])
+// //     def set(key: Any, value: DT) = self.copy(data = self.data + (key -> value))
+

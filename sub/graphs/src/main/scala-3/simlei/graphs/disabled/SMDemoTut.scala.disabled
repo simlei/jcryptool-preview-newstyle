@@ -1,0 +1,354 @@
+//package simlei.graphs
+//object SMDemoTut:
+//  // from: https://blog.softwaremill.com/starting-with-scala-3-macros-a-short-tutorial-88e9d2b2584c
+
+//  // Inlines or macros?
+//  // The first question to consider is: Do I have to write a macro in the first place?
+
+//  // Scala 3 offers two basic metaprogramming modes: inlines or macros.
+
+//  // The inline modifier instructs the compiler to evaluate the code at compile-time. This includes expanding inline def method definitions, simplifying inline if and inline match expressions, or performing inline summon (looking up given/implicit values). Through Mirrors, you can inspect data structures, such as case classes and enums. The official documentation has more details on how inlines work and what their possibilities are.
+
+//  // inlines can get you so far, but have their limits. They are declarative in their nature, hence the possibilities are limited to what is directly supported by the compiler. It's not possible to inspect code passed as a parameter to an inline method or generate arbitrary code as a result. Only partial information on data structures is available through Mirrors — for example annotations are not available, and if your data is not a case class, a mirror usually won't be available.
+
+//  // Hence, you might turn to macros: they give you way more power and way more flexibility, at the cost of being more complex to write. As an introduction to writing macros, check out my other article, "Starting with Scala 3 macros: a short tutorial". Here, we will focus on slightly more advanced topics.
+
+//  // Macros or libraries?
+//  // If you're convinced that inline won't work for your use case, there's still a chance you might escape the need of writing a macro! In a lot of cases, macros are used to perform derivation: generating code based on the structure of your data.
+
+//  // If the derivation that you'd like to perform has a regular structure, you might be able to use one of the available high-level methods for typeclass derivation in Scala:
+
+//  // using inlines & mirrors, see the docs, and this blog which provides a great explanation of the involved concepts
+//  // using Magnolia, where you implement a simple interface for handling products & coproducts, and this is then used by the Magnolia macro
+//  // using the recently released Shapeless 3, which is driven by givens and implicit resolution
+//  // If none of the above meets your needs, there’s no escape: you'll have to write a macro. The linked documentation is a great starting point, still, there's a number of things that come up when you start working with the macros API.
+
+//  // Expressions and terms
+//  // When writing macros, you'll find yourself working a lot with values of type Expr and Tree/Term. In general, Expr[T] represents an opaque, typed expression. You can't do much with it, other than splicing it and thus combining it with other code.
+
+//  // Terms, on the other hand, are the lower-level representation. Here you have access to the whole AST, which you can inspect, or generate by hand. However, to splice a term into a code block, you'll need to first convert it to an expression, using .asExpr: Expr[Any] or .asExprOf[T], if you have access to the precise representation of the type T.
+
+//  // Quoting & splicing
+//  // Quoting is converting Scala code into an Expr, and is written down using '{ ... }. The inverse operation is splicing ${ ... }, that is embedding some expression in Scala code. These are the two most basic operations. If you are tempted to write down an AST fragment (a Term) by hand — try to resist it — and see if you can achieve the same effect using quotes & splices.
+
+//  // You'll get much better support from the compiler, as quotes & splices are checked in two ways:
+
+//  // the number of quotes & splices must match. You can visualize this as quoting increasing the nesting level, and splicing decreasing. Normal code is on level 0, and that the levels match is enforced by the compiler
+//  // the code in the quotes is type-checked, taking into account the splices. That is, if you splice an Expr[T], this is treated as a value of type T, with all of the consequences that this brings.
+//  // Shape of a macro
+//  // The general shape of a macro is as follows:
+
+//  import scala.quoted.*
+
+//  // possibly elsewhere
+//  object example:
+//    object MyMacro {
+//      def myMacroImpl(param1: Expr[String])(using Quotes): Expr[Int] = {
+//        import quotes.reflect.*
+//        '{42}
+//      }
+//    }
+
+//    // anywhere
+//    inline def myMacro(inline param1: String): Int = ${MyMacro.myMacroImpl('param1)}
+
+
+//  // The user-facing myMacro method must be inline, so that it is evaluated at compile-time. If we want to inspect the shape of the parameters or capture the code that is used to compute the parameter, they have to be inline as well. In the implementation of the method, we splice the result of invoking the macro; the myMacroImpl macro invocation should mirror the original invocation. Finally, the myMacroImpl implementation must always be statically accessible (an object is a good place).
+
+//  // Note that each parameter of our method and the result type is lifted to an Expr. That’s because when writing a macro, we don’t have access to the values of the parameters, but only to the code that is used to calculate their value. In other words, we can access the expression (the AST), but not the value that is the result of evaluating it.
+
+//  // Each macro implementation can (and usually has to) use a Quotes instance, which is given by the compiler. If we want to work with Terms (we usually do at some point), we'll need to import quotes.reflect.*. The quotes method comes from the scala.quoted.* import and simply summons the given Quotes.
+
+//  // Organizing larger macros
+//  // As your macro grows, you might want to organize code in methods or classes. It’s not that easy though, as the Terms/Trees types are path-dependent on the given Quotes instance. So you can't simply return a Term; when a method returns such a value, the full type of the result is in fact quotes.reflect.Term. So creating a helper method is a bit more tricky.
+
+//  // Note that this does not apply when your helper methods create Exprs. These are defined as top-level types, so you can pass them around freely. Stil, to create or manipulate an Expr, you'll probably need a using Quotes parameter in your method.
+
+//  // If all you need are helper methods and all of your macro code is in a single class, you can move the Quotes parameter to the constructor:
+
+
+//  // The main macro invocation still needs to be statically accessible
+//  object example2:
+//    object MyMacro {
+//      def myMacroImpl(param1: Expr[String])(using Quotes): Expr[Int] = 
+//        new MyMacro().myMacroImpl(param1)
+//    }
+
+//    class MyMacro(using Quotes) {
+//      import quotes.reflect.*
+
+//      def myMacroImpl(param1: Expr[String]): Expr[Int] = 
+//        myHelperMethod.asExprOf[Int]
+
+//      private def myHelperMethod: Term = '{42}.asTerm
+//    }
+
+//  // If you'd like to create a helper class that is used across multiple macros, things are a bit more complex. For example, here's a fragment of the helper class for working with case classes in tapir:
+
+//  // more on Type, TypeRepr, Symbol etc. later
+//  object example3:
+//    class CaseClass[Q <: Quotes, T: Type](using val q: Q) {
+//      import q.reflect.*
+
+//      val tpe = TypeRepr.of[T]
+//      val symbol = tpe.typeSymbol
+
+//      def name = symbol.name
+//    }
+
+//    // usage, in a macro; here the macro returns the name of the case class which
+//    // is the type parameter
+//    def myMacroImpl[T : Type]()(using q: Quotes): Expr[String] = {
+//      import quotes.reflect.*
+//      val caseClass = new CaseClass[q.type, T]
+//      Expr(caseClass.name) // lifting a string to an Expr
+//      // '{Expr(caseClass.name)} // lifting a string to an Expr // TODO: original: faulty?
+//    }
+
+//  // The Q type parameter allows us to parametrise the helper class with the singleton type of the Quotes instance that we are using, thus ensuring that all of the types match.
+
+//  // By the way, above you can also see an example of lifting a value that’s known at compile-time (here: a String representing the name of the case class) to an expression, using Expr(caseClass.name). Such a value has to cross the boundary from compile-time to run-time, hence the need for special treatment. This can be done for primitive types, tuples or primitive types etc., and is covered by the ToExpr typeclass.
+
+//  // Debugging
+//  // One of the first things that you'll need when writing a macro is a way to debug your code. While I think it is possible to attach a debugger to the scala compiler process, I've personally never tried that, and always relied on println. Putting a println in your macro implementation will print the information during compilation.
+
+//  // As you'll be working with Terms and Trees, you'll often wonder "how does the AST for this code look?"
+
+//  // This is achieved using the following:
+
+//  //TODO: how to bake?
+//  object example4:
+//    // ()
+//    def myDbgImpl(x: Expr[Any])(using Quotes): Expr[Unit] = {
+//      import quotes.reflect.*
+//      val printed1 = x.asTerm.show(using Printer.TreeStructure)
+//      val printed2 = x.asTerm.show(using Printer.TreeCode)
+//      '{
+//        println( "1 - ".repeat(5) + "Printer.TreeStructure")
+//        println( ${ Expr(printed1) } )
+//        println( "2 - ".repeat(5) + "Printer.TreeCode")
+//        println( ${ Expr(printed2) } )
+//        println( "X - ".repeat(5) )
+//      }
+//    }
+
+//    inline def myDbg(inline x: Any): Unit =
+//      ${myDbgImpl('x)}
+//    // val x: Expr[Any] = ???
+//    // x.asTerm.show(using Printer.TreeStructure)
+
+//  // Here Printer comes from import quotes.reflect.*. There are a couple more variants of the printer available:
+
+//  // term.show or term.show(using Printer.TreeCode) will print the fully-typed, code-like representation of the term
+//  // term.show(using Printer.TreeAnsiCode) will additionally color the output
+//  // term.show(using Printer.TreeStructure) will show the AST
+//  // I often use the following macro to see how a piece of code is represented as an AST:
+
+//  object example5:
+//    // macro
+//    object PrintTree {
+//      inline def printTree[T](inline x: T): Unit = ${printTreeImpl('x)}
+//      def printTreeImpl[T: Type](x: Expr[T])(using qctx: Quotes): Expr[Unit] =
+//        import qctx.reflect.*
+//        println(">".repeat(40))
+//        println(x.asTerm.show(using Printer.TreeStructure))
+//        println("<".repeat(40))
+//        '{()}
+//    }
+
+//    // usage
+//    // PrintTree.printTree {
+//    //   (s: String) => s.length
+//    // }
+
+//  // // output
+//  // Inlined(None, Nil, Block(Nil, Block(List(DefDef("$anonfun", List(TermParamClause(List(ValDef("s", TypeIdent("String"), None)))), Inferred(), Some(Block(Nil, Apply(Select(Ident("s"), "length"), Nil))))), Closure(Ident("$anonfun"), None))))
+
+//  // // after a while the above representation becomes semi-readable
+//  // To compare, using the default printer we would get:
+
+//  // ((s: scala.Predef.String) => s.length())
+//  // The AST
+//  // When writing any non-trivial macro, you'll need to become at least a bit familiar with the reflect AST. It's defined in its entirety in the Quotes.scala file. The scaladoc on the reflectModule is especially useful, as it shows the entire structure of the AST in a single (textual!) diagram.
+
+//  // I recommend at least scanning through the entire file. You'll find yourself looking for methods matching what you have at hand quite a lot.
+
+//  // The scala.quoted package also contains the Expr.scala and Type.scala files - they are much shorter, as you can do much less with the values of these types, but it's good to know what's inside there anyway.
+
+//  // Bottom line: bookmark the Quotes.scala file in your IDE!
+
+//  // Types
+//  // Scala is all about types! And they are properly represented in macros, in a couple of forms. You'll probably work with all of them, so it's good to have a rough idea of which one is which.
+
+//  // Just as an Expr is a "lifted" version of a Scala expression (that is — code), we have Type[T] which is a "lifted" version of a type T. And just like Expr, there are almost no useful methods on the type Type itself. It only gets interesting when we use the reflect API.
+
+//  // Here, you can encounter types in a couple of forms:
+
+//  // TypeRepr: as the name suggests, a representation of a type. This can be either a "normal" type, a type constructor or type bounds.
+//  // TypeTree: a type, as it would be written down in the source code.
+//  // Type[T]: an opaque representation of a type
+//  // TypeRepr
+//  // There's a number of useful methods that can be invoked on a type representation. First of all, we can obtain a TypeRepr from a Type using TypeRepr.of[T]; conversion the other way round is possible using .asType.
+
+//  // Secondly, a TypeRepr has methods such as dealias, widen or simplified. These are useful if you want to obtain the canonical type representation. Widening is useful as Scala often infers singleton types, while we are really interested in the underlying ones.
+
+//  // Finally, it’s possible to inspect the type representation, discovering what type it represents: is it a named type, a union type, a match type etc.
+
+//  // TypeTree
+//  // When writing down AST by hand, you'll often need to provide a type tree, which corresponds to the type as if it was written down in the source code.
+
+//  // A TypeTree can be created given a Type using TypeTree.of[T], but also given a TypeRepr, by using the Inferred(tpe: TypeRepr) constructor. This is one example of why it's beneficial to know your way around the AST!
+
+//  // The TypeRepr for a TypeTree can be obtained using .tpe. You can think of this as “evaluating” the type-level expression and getting its value.
+
+//  // Type
+//  // Finally, we've got the counterpart of expressions (which are represented as Expr[T]) from the type world: Type[T]. For readability and convenience reasons, types are not spliced and quoted the same as expressions, that is using ${...} and '{...}. Instead, quoting and splicing happens automatically.
+
+//  // A type can be spliced, as long as a Type[T] instance is available in the given scope. The compiler also makes sure that the quoting and splicing of types adheres to the phase consistency principle — that is, that the number of quotes and splices match.
+
+//  // In practice, for any type parameter that your macro uses, you can (and should) request a given Type instance. This will allow you to inspect and use the type. Note that unlike the other representations (TypeRepr and TypeTree), Type[T] is itself parameterized with the type it represents; in a way, the type parameter crosses macro boundaries and allows writing type-safe code on various levels.
+
+//  // A crucial property of Types is that they can be matched on! Quite often, you'll only have a TypeRepr, but you'd need to generate an expression for whatever that type is — but to do that, you need a handle on the type parameter. Here's a trick that I've ended up using surprisingly often; for example, summoning an implicit for the type behind a symbol:
+
+//  // field: Symbol - e.g. a case class field, obtained from the case classes symbol using .caseFields
+
+//  //TODO: how to bake?
+//  object example6:
+//    ()
+//    // val field: Symbol = ???
+//    // field.tpe.asType match {
+//    //   case '[f] => 
+//    //     // here we can use "f" as a type parameter, an instance of Type[f] is also available
+//    //     // JsonEncoder is an imaginary type that you are using in your macro
+//    //     Expr.summon[JsonEncoder[f]]: Option[Expr[f]]
+//    // }
+
+//    // Moreover, you can match on the shape of the type as well. If you'd like to treat lists and options differently, here's what you could do:
+
+//    // someType match {
+//    //   case '[List[f]] => ...
+//    //   case '[Option[f]] => ...
+//    //   case '[f] => ...
+//    // }
+
+//  // Symbol
+//  // Symbols are handles for the various "things" that you encounter in a Scala program: classes, types, methods, parameters, values. The trees that we covered before correspond to how your code is structured. Behind each tree, there's a symbol that "owns" a given definition.
+
+//  // Additionally, symbols are available for all the classes, methods etc. outside the current compilation unit. You can obtain symbols for methods and types coming from a library for example; however, you shouldn't rely on the fact that a Tree for such a method/type will be available.
+
+//  // Take a look at the methods on the Symbol companion object: you can obtain symbols for a top-level class, module or package, as well as inspect the surrounding environment using Symbol.spliceOwner, and then bubbling up using .parent.
+
+//  // Symbols also give access to many interesting pieces of meta-data, for example:
+
+//  // the name of the class/method/type through .name
+//  // member fields, member types, declared methods etc.
+//  // fields of a case class through .caseFields
+//  // implementations of a sealed trait / enum through .children
+//  // How to get hold of a symbol? For types, they are available through TypeRepr, using the .termSymbol and .typeSymbol methods. For example, here's how you would get the name of the class, used as the type parameter, in a macro:
+
+
+//  object example7:
+//    object MyMacro {
+//      inline def name[T]: String = ${MyMacro.nameImpl[T]}
+
+//      def nameImpl[T: Type](using Quotes): Expr[String] = {
+//        import quotes.reflect.*
+//        Expr(TypeRepr.of[T].typeSymbol.name)
+//      }
+//    }
+
+//  // You can get the symbol owning a given tree using the Tree.symbol method.
+
+//  // Creating a new function or method
+//  // If you need to create a new method, it is best to use quoting & splicing, if possible. As long as you can get hold of the types, to create properly typed Exprs, you should be good. For example, if you'd like to define a function value, which takes a single parameter, and then dynamically creates the body of the function using that parameter:
+
+//  object example8:
+//    given quotes:Quotes = summon
+//    import quotes.reflect.*
+
+//    def createFunctionBody(param: Term): Term = ???
+
+//    def createFunction[A: Type]: Expr[A => String] =
+//      import quotes.reflect.*
+//      '{(a: A) => ${createFunctionBody('{a}.asTerm).asExprOf[String]}}
+//      // '{(a: A) => ${createFunctionBody('{a}.asTerm)}} // TODO: doesn't work
+
+//  // Note how we use quoting and splicing interchangeably, traveling between the "normal Scala" and "lifted expressions" worlds.
+
+//  // There are situations where you do need to create a method dynamically, though. To do that, you'll first need to create a new method symbol, and then use that symbol when creating a method definition, for example:
+
+//  //TODO: how to bake? typeReprOfParam is not defined.
+//    // val myMethodSymbol = Symbol.newMethod(
+//    //   Symbol.spliceOwner, 
+//    //   "myMethod", 
+//    //   MethodType(
+//    //     List("param"))( // parameter list - here a single parameter
+//    //       _ => List(typeReprOfParam), // type of the parameter - here dynamic, given as a TypeRepr
+//    //       _ => TypeRepr.of[Int])) // return type - here static, always Int
+
+//    // // tree representing: def myMethod(param) = ...
+//    // val myMethodDef = DefDef(
+//    //   myMethodSymbol, {
+//    //     case List(List(paramTerm: Term)) => Some(myMethodBody(paramTerm).changeOwner(myMethodSymbol))
+//    //   }
+//    // )
+
+//  // the myMethodDef can be now spliced in a larger expression or e.g. used in a Block(...)
+
+//  // Typechecking and summoning givens
+//  // Macros and givens/implicits often go hand in hand, with givens for "basic" types defined directly, and anything that is more complex being handled by a macro. Thus we often end up using givens within a macro.
+
+//  // A given can be summoned on-demand using Expr.summon[SomeType[T]]. This gives you an Option[Expr[SomeType[T]]], allowing you to act depending if the given was found or not:
+
+//  // you can either try a fallback, summoning an implicit of a more general type, or generating code handling "default" cases
+//  // or you can report a custom compilation error to the user:
+//  // Expr.summon[SomeType[T]].getOrElse {
+//  //   report.throwError("Cannot find an instance of SomeType for ${Type.show[T]}! Please help!")
+//  // }
+//  // There’s one important thing to keep in mind when the generated code which itself summons givens. Let's say we have a method with a using clause (outside of the macro which we are writing):
+
+//  object example10:
+//    trait MyTypeclass[T]
+//    given MyTypeclass[String] with {}
+
+//    def myMethod[T](using MyTypeclass[T]): Unit = ()
+
+//    // In the macro we're generating code, which calls myMethod. We can either rely on the compiler to infer the parameter (1), or provide the MyTypeclass argument explicitly (2). Are these two approaches equivalent?
+
+//    inline def test[T]: Unit = ${testImpl[T]}
+
+//    def testImpl[T: Type](using Quotes): Expr[Unit] = {
+//      import quotes.reflect.*
+//      // '{myMethod[T]} // (1)
+//      // or:    
+//      '{myMethod[T](using ${Expr.summon[MyTypeclass[T]].get})} // (2)
+//      // '{myMethod[T](${Expr.summon[MyTypeclass[T]].get})} // (2) // TODO: doesn't work
+//    }
+
+//  // example usage - should use the: given MyTypeclass[String], defined above
+//    // test[String]
+
+//  // What might be initially surprising, is that (1) does not compile — there's an error saying that a MyTypeclass[T] cannot be summoned! That's because splicing of the type T (which in this concrete invocation, is a String) happens only after typechecking. However, (2) works: here we use explicit summoning, which uses the knowledge of what T is (as represented by Type[T]) and finds the correct given instance.
+
+//  // See also the discussion on Dotty's GitHub. This is an example of an important rule in inlines and macro splices/quotes: typechecking comes first; only later, splicing, quoting, and inlining are done.
+
+//  // Handy constructors
+//  // Finally, while it might not be that obvious when initially reading the Quotes.scala file, there are quite a lot of handy constructors which allow creating terms by hand.
+
+//  // If you need to select a member from a term (without knowing its type, so using quotes isn't possible), there's Select.unique and Select.overloaded. For example, here's how we generate obj.isInstanceOf[ChildType] in quicklens:
+
+//  // obj: Term
+//  // child: Symbol
+
+//  // TypeApply(Select.unique(obj, "isInstanceOf"), List(TypeIdent(child)))
+
+//  // Another construct which you'll frequently spot when printing out trees are Idents. But how to create one? Turns out, the answer is the Ref constructor, which takes a Symbol, and basing on whatever that symbol is representing, creates an appropriate implementation.
+
+//  // These are just two examples, but since the AST is fully typed, once again the types serve as great guidance — exploring what's possible by looking for usages of TypeRepr, Symbol, or other constructs is a great way to learn how to work with Scala's compile-time reflection.
+
+//  // Summing up
+//  // There's much more that could be said about macros. Hopefully the above will help you in starting your adventure with metaprogramming in Scala!
+
+//  // Going further, I can recommend reading the code of libraries that already use Scala 3 macros. Be it quicklens, tapir, protoquill, monocle, or many of the other libraries which will either migrate from Scala 2 macros, or provide brand new functionality using Scala 3.
+
+//  // I'd like to take the opportunity to thank Nicolas Stucki, Guillaume Martres for their patience and answering many of my metaprogramming-related questions on gitter and GitHub.

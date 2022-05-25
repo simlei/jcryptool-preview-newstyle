@@ -1,0 +1,172 @@
+// package simlei.graphs
+// import scala.quoted.*
+
+// object MacroTools {
+
+//   case class Test1(p1: Int)
+//   case class Test2()
+
+//   import scala.quoted.Varargs
+
+//   inline def sumNow(inline nums: Int*): Int =
+//     ${ sumCode('nums)  }
+
+//   def sumCode(nums: Expr[Seq[Int]])(using q: Quotes): Expr[Int] =
+//     import q.reflect.*
+//     nums match
+//       case  Varargs(numberExprs) => // numberExprs: Seq[Expr[Int]]
+//         val numbers: Seq[Int] = numberExprs.map(_.valueOrError)
+//         Expr(numbers.sum)
+//       case _ => {
+//         report.error(
+//         "Expected explicit argument" +
+//         "Notation `args: _*` is not supported.")
+//         '{-1}
+//       }
+
+
+//   inline def inspect(inline x: Any) = ${ inspectCode('x) }
+//   def inspectCode(x: Expr[Any])(using Quotes): Expr[Any] =
+//     println("inspect: " + x.show)
+//     x
+
+//   inline def inspectList(inline list: List[Any]): Unit = ${ inspectListImpl('list) }
+//   def inspectListImpl(list: Expr[List[Any]])(using q:Quotes): Expr[Unit] = {
+//     import q.reflect.*
+//     println(">-------------------")
+//     println(
+//       list.asTerm match
+//         case Apply(sym, args) => s"Apply($sym, $args)"
+//         case _ => "no match..."
+//     )
+//     println(">-------------------")
+//     '{()}
+//   }
+
+//   inline def inspectSeqAsVA(inline seq: Seq[Any]): Unit = ${ inspectVarargsImpl('seq) }
+//   inline def inspectVarargsAsVA(inline paramlist: Any*): Unit = ${ inspectVarargsImpl('paramlist) }
+
+//   def inspectVarargsImpl(paramlist: Expr[Seq[Any]])(using q:Quotes): Expr[Unit] =
+//     import q.reflect.*
+//       val raw = paramlist.show
+//       val toPrint = paramlist match
+//         case Varargs(elements) => s"Varargs(${elements.map(_.show).toString})"
+//         case _ => "Varargs unapply failed"
+//     '{
+//       println("--------------")
+//       println("inspectVarargsImpl: " + ${Expr(toPrint)})
+//       println("inspectVarargsImpl: " + ${Expr(raw)})
+//       println("--------------")
+//     }
+
+//   inline def debugSingle(expr: Any): Unit = ${ debugSingleImpl('expr) }
+//   def debugSingleImpl(expr: Expr[Any])(using Quotes): Expr[Unit] = {
+//     '{ println("Value of " + ${Expr(expr.show)} + " is " + $expr) }
+//   }
+
+//   inline def inspectCreationWith[A <: AnyRef](inline paramlist: String*): Unit = ${ inspectCreationWithImpl[A]('paramlist) }
+
+//   def inspectCreationWithImpl[A <: AnyRef : Type](paramlist: Expr[Seq[String]])(using q:Quotes): Expr[Unit] =
+//     import q.reflect.*
+//       val listOfExprs = paramlist match
+//         case Varargs(elements) => elements.map(el => el.asTerm).toList
+//         case _ => List()
+//       val x: Option[Seq[Expr[Any]]] = Varargs.unapply(paramlist)
+//       val toPrint: Expr[String] = Expr(paramlist.asTerm.show(using Printer.TreeStructure))
+//     '{
+//       println("came through, lets see...! " + ${toPrint})
+//       // println("came through! " + ${Expr( paramlist.show )})
+//       // println("came through! " + ${Expr(x.toString)})
+//     }
+
+//   @main def MacroToolsMain(): Unit = {
+//     println("hello from " + MacroTools)
+//     println("byyyyyye!")
+//   }
+
+
+// // // x: Expr[Something]
+// // x.asTerm.show(using Printer.TreeStructure) // TreeCode/TreeAnsiCodeTreeStructure
+
+//   inline def inspectConstr[A](inline paramlists: Any*): Unit = ${ inspectConstrThat[A]('paramlists) }
+//   def inspectConstrThat[A : Type](paramlist: Expr[Seq[Any]])(using q:Quotes): Expr[Unit] =
+//     import q.reflect.*
+//     TypeRepr.of[A].classSymbol.map{ sym =>
+//       val pC: Symbol = sym.primaryConstructor;
+//       val s: Symbol = sym;
+//       val allArgs: List[Expr[Any]] = paramlist match 
+//         case Varargs(elExprs) => elExprs.toList
+//         case _ => throw new RuntimeException("could not get args from paramlist")
+//       // val allArgsVal = allArgs.map(ex => ex.valueOrError)
+//       var output = List[String]()
+//       output = output :+ ">>>>>>>>>>>>"
+//       output = output :+ s"All args: ${allArgs.map(_.show)}"
+//       // output = output :+ s"All args: ${allArgsVal}"
+//       output = output :+ pC.paramSymss.toString
+//       output = output :+ "signature: " + pC.signature
+//       output = output :+ ".paramSigs: " + pC.signature.paramSigs
+//       output = output :+ "<<<<<<<<<<";
+//       '{println(${Expr(output.mkString("\n"))})}
+//   }.getOrElse('{println("top level match failed")})
+
+
+//   // inline def createBouncycastleEngine[A <: AnyRef](inline paramlists: Any*): A = ${ createBouncycastleEngineThat[A]('paramlists) }
+//   // def createBouncycastleEngineThat[A <: AnyRef : Type](paramlist: Expr[Seq[Any]])(using q:Quotes): Expr[A] =
+//   // {
+//   //   import quotes.reflect.*
+//   //   TypeRepr.of[A].classSymbol.map( sym =>
+      
+
+//   //   ).getOrElse(throw new RuntimeException("could not instantiate"))
+//   // }
+
+// // works for a case class with no constructor args...
+//   inline def make[A <: AnyRef](inline paramlists: Any*): A = ${ makeThat[A]('paramlists) }
+//   def makeThat[A <: AnyRef : Type](paramlist: Expr[Seq[Any]])(using q:Quotes): Expr[A] =
+//   {
+//     import quotes.reflect.*
+//     TypeRepr.of[A].classSymbol.map( sym =>
+//       val pC: Symbol = sym.primaryConstructor;
+//       val s: Symbol = sym;
+//       val allArgs: List[Expr[Any]] = paramlist match 
+//         case Varargs(elExprs) => elExprs.toList
+//         case _ => throw new RuntimeException("could not get args from paramlist")
+//       println(">>>>>>>>>>")
+//       println(s"All args: ${allArgs.map(_.show)}")
+//       println(pC.paramSymss)
+//       val first: Symbol = pC.paramSymss(0)(0)
+//       println("signature: " + pC.signature)
+//       println("<<<<<<<<<<")
+//       Apply(
+//         Select(
+//           New(TypeTree.of[A]), 
+//           sym.primaryConstructor
+//         ), 
+//         paramlist match
+//         case Varargs(elExprs) => elExprs.map(exp => exp.asTerm).toList
+//         case _ => throw new RuntimeException("could not extract argument list for constructor")
+        
+//       ).asExprOf[A]
+//     )
+//     .getOrElse(throw new RuntimeException("no invocation found..."))
+//   }
+
+
+//   inline def inspectType[A <: AnyRef]: Unit = ${ inspectTypeThat[A] }
+//   def inspectTypeThat[A <: AnyRef : Type](using Quotes): Expr[Unit] =
+//     import quotes.reflect.*
+//     val classSym: Symbol = TypeRepr.of[A].classSymbol.get
+//     val constructor = classSym.primaryConstructor
+//     val consParamSymbols = constructor.paramSymss
+//     return '{
+//       // println("My print (classSym):" + ${Expr(classSym.toString)})
+//       println("constructor:" + ${Expr(constructor.toString)})
+//       println("constructor params:" + ${Expr(consParamSymbols.toString)})
+//       // ()
+//     }
+//     // return '{()}
+//   // def constructBlockCipherEngineGeneric[T <: BlockCipher](cl: Class[T], blocksizeBits: Int): BlockCipher = ???
+
+// }
+
+
